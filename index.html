@@ -39,6 +39,7 @@
     label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
     select,button{width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(8,10,22,.65);color:var(--text);padding:10px 12px;font-size:14px;outline:none}
     select:focus{border-color:rgba(57,182,255,.55);box-shadow:0 0 0 3px rgba(57,182,255,.18)}
+    select:disabled{opacity:.55;cursor:not-allowed}
     button{cursor:pointer;border-color:rgba(255,255,255,.16);background:linear-gradient(180deg, rgba(255,79,216,.26), rgba(57,182,255,.16));}
     button.secondary{background:transparent}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -53,19 +54,25 @@
     .bad{color:var(--bad)}
     .note{font-size:12px;color:var(--muted);line-height:1.45}
     .tiny{font-size:11px;color:var(--muted)}
+    .spacer{height:10px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1><span class="pink">Dreambloom Ruins: Erosion Bloom Afterimage</span> — Console Solver</h1>
-    <p class="sub">Blue Protocol: Star Resonance (Season 2) • Phase 2: <b>Avatar of the End</b>. Consoles take a 4-digit code using only <span class="mono">1</span>/<span class="mono">2</span>. Select the in-game feedback: <b># correct digits in the correct position</b>. (Guaranteed ≤4 checks with forced openers.)</p>
+    <p class="sub">
+      Blue Protocol: Star Resonance (Season 2) • Phase 2: <b>Avatar of the End</b>.
+      Consoles take a 4-digit code using only <span class="mono">1</span>/<span class="mono">2</span>.
+      Select the in-game feedback: <b># correct digits in the correct position</b>.
+      (Worst case needs 4 checks.)
+    </p>
 
     <div class="card">
       <div class="grid">
         <div class="box">
           <h3>Step 1 (forced)</h3>
           <div class="pill"><span class="mono big">1111</span></div>
-          <div style="height:10px"></div>
+          <div class="spacer"></div>
           <label for="k">Feedback (0–4)</label>
           <select id="k">
             <option value="">Select…</option>
@@ -76,7 +83,7 @@
         <div class="box">
           <h3>Step 2 (forced)</h3>
           <div class="pill"><span class="mono big">1122</span></div>
-          <div style="height:10px"></div>
+          <div class="spacer"></div>
           <label for="r">Feedback (0–4)</label>
           <select id="r">
             <option value="">Select…</option>
@@ -86,26 +93,66 @@
       </div>
 
       <div class="hr"></div>
-      <div id="out"></div>
+
+      <!-- Always-visible Steps 3 & 4 live here -->
+      <div id="out">
+        <div class="box" id="resultBox">
+          <h3>Result</h3>
+          <div class="note" id="statusText">Select feedback for Step 1 and Step 2.</div>
+          <div class="spacer"></div>
+          <div class="note" id="candText"></div>
+          <div class="spacer"></div>
+          <div class="mono big blue" id="finalCode" style="display:none;"></div>
+        </div>
+
+        <div class="box" id="step3Box">
+          <h3>Step 3</h3>
+          <div class="pill">Next guess: <b class="mono big yellow" id="g3Text">----</b></div>
+          <div class="spacer"></div>
+          <label for="g3Sel" id="g3Label">Feedback (0–4)</label>
+          <select id="g3Sel" disabled>
+            <option value="">Select…</option>
+            <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option>
+          </select>
+          <div class="spacer"></div>
+          <div class="note" id="g3Help"></div>
+        </div>
+
+        <div class="box" id="step4Box">
+          <h3>Step 4</h3>
+          <div class="pill">Next guess: <b class="mono big yellow" id="g4Text">----</b></div>
+          <div class="spacer"></div>
+          <label for="g4Sel" id="g4Label">Feedback (0–4)</label>
+          <select id="g4Sel" disabled>
+            <option value="">Select…</option>
+            <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option>
+          </select>
+          <div class="spacer"></div>
+          <div class="note" id="g4Help"></div>
+        </div>
+      </div>
+
       <div class="hr"></div>
 
       <div class="row">
         <div class="note" style="flex:1">
-          Best case: 1 step; Worst case: 4 steps.
+          Tip: Steps 3 & 4 are always shown. Only fill them if the solver says they’re needed.
         </div>
         <div style="min-width:160px">
           <button id="reset" class="secondary">Reset</button>
         </div>
       </div>
+
       <div class="tiny" style="margin-top:12px; text-align:center;">
-  <div style="margin-top:14px;">
-    Made by <b>Beelze</b> from <span class="pink">TheDayDreamers</span> Guild (#294742)
-  </div>
-  <div style="margin-top:12px;">
-    <!-- Replace logo.png with your actual logo filename -->
-    <img src="logo.png" alt="TheDayDreamers Guild Logo" style="max-width:150px; opacity:0.9;">
-  </div>
-</div>
+        Forced openers: 1111 → 1122.
+        <div style="margin-top:14px;">
+          Made by <b>Beelze</b> from <span class="pink">TheDayDreamers</span> Guild
+        </div>
+        <div style="margin-top:12px;">
+          <!-- Replace logo.png with your actual logo filename -->
+          <img src="logo.png" alt="TheDayDreamers Guild Logo" style="max-width:150px; opacity:0.9;">
+        </div>
+      </div>
     </div>
   </div>
 
@@ -120,196 +167,291 @@
   const ALL = (() => {
     const out = [];
     for (let i = 0; i < 16; i++) {
-      let s = '';
-      for (let b = 3; b >= 0; b--) s += ((i >> b) & 1) ? '2' : '1';
+      let s = "";
+      for (let b = 3; b >= 0; b--) s += ((i >> b) & 1) ? "2" : "1";
       out.push(s);
     }
     return out;
   })();
 
   function candidatesFrom(k, r) {
-    return ALL.filter(code => exactMatches(code, '1111') === k && exactMatches(code, '1122') === r);
+    return ALL.filter(code => exactMatches(code, "1111") === k && exactMatches(code, "1122") === r);
   }
 
-  const elK = document.getElementById('k');
-const elR = document.getElementById('r');
-const elOut = document.getElementById('out');
-const elReset = document.getElementById('reset');
+  // Pick an optimal splitter guess (minimax worst-case remaining, then expected remaining; prefer guessing a remaining candidate)
+  function bestNextGuess(cands) {
+    if (!cands || cands.length <= 1) return null;
 
-function setStep2Enabled(enabled) {
-  elR.disabled = !enabled;
-  elR.style.opacity = enabled ? '1' : '0.55';
-  elR.style.cursor = enabled ? 'pointer' : 'not-allowed';
-  if (!enabled) elR.value = '';
-}
+    let best = null;
+    for (const g of ALL) {
+      const bins = [0,0,0,0,0];
+      for (const c of cands) bins[exactMatches(c, g)]++;
 
-  function renderBase() {
-    elOut.innerHTML = `
-      <div class="box">
-        <h3>Result</h3>
-        <div class="note">Select feedback for Step 1 and Step 2.</div>
-      </div>
-    `;
+      const worst = Math.max(...bins);
+      const N = cands.length;
+      const expected = bins.reduce((acc,n)=>acc+n*n,0) / N; // E[size] if secret uniformly random among cands
+      const inCand = cands.includes(g) ? 0 : 1;
+
+      const score = { worst, expected, inCand, g };
+
+      if (
+        !best ||
+        score.worst < best.worst ||
+        (score.worst === best.worst && score.expected < best.expected) ||
+        (score.worst === best.worst && score.expected === best.expected && score.inCand < best.inCand) ||
+        (score.worst === best.worst && score.expected === best.expected && score.inCand === best.inCand && score.g < best.g)
+      ) best = score;
+    }
+    return best.g;
+  }
+
+  // Elements
+  const elK = document.getElementById("k");
+  const elR = document.getElementById("r");
+  const elReset = document.getElementById("reset");
+
+  const statusText = document.getElementById("statusText");
+  const candText = document.getElementById("candText");
+  const finalCode = document.getElementById("finalCode");
+
+  const g3Text = document.getElementById("g3Text");
+  const g3Label = document.getElementById("g3Label");
+  const g3Sel = document.getElementById("g3Sel");
+  const g3Help = document.getElementById("g3Help");
+
+  const g4Text = document.getElementById("g4Text");
+  const g4Label = document.getElementById("g4Label");
+  const g4Sel = document.getElementById("g4Sel");
+  const g4Help = document.getElementById("g4Help");
+
+  // State
+  let baseCands = [];   // after step2
+  let g3 = null;
+  let candsAfter3 = [];
+  let g4 = null;
+
+  function setStep2Enabled(enabled) {
+    elR.disabled = !enabled;
+    if (!enabled) elR.value = "";
+  }
+
+  function resetStep3UI() {
+    g3 = null;
+    g3Text.textContent = "----";
+    g3Label.textContent = "Feedback (0–4)";
+    g3Sel.value = "";
+    g3Sel.disabled = true;
+    g3Help.textContent = "";
+    candsAfter3 = [];
+  }
+
+  function resetStep4UI() {
+    g4 = null;
+    g4Text.textContent = "----";
+    g4Label.textContent = "Feedback (0–4)";
+    g4Sel.value = "";
+    g4Sel.disabled = true;
+    g4Help.textContent = "";
+  }
+
+  function setSolved(code, note) {
+    statusText.innerHTML = `<span class="good"><b>Solved</b></span>${note ? " — " + note : ""}`;
+    candText.textContent = "";
+    finalCode.style.display = "block";
+    finalCode.textContent = code;
+    resetStep3UI();
+    resetStep4UI();
+  }
+
+  function setInconsistent(where) {
+    statusText.innerHTML = `<span class="bad"><b>Inconsistent feedback</b></span>${where ? " — " + where : ""}`;
+    finalCode.style.display = "none";
+    finalCode.textContent = "";
+    candText.textContent = "Re-check the counts you selected.";
+    resetStep3UI();
+    resetStep4UI();
   }
 
   function render() {
-  const kVal = elK.value;
-  const rVal = elR.value;
+    const kVal = elK.value;
 
-  // Early-finish after Step 1
-  if (kVal !== '' && (Number(kVal) === 0 || Number(kVal) === 4)) {
-    const k = Number(kVal);
-    const answer = (k === 0) ? '2222' : '1111';
-    setStep2Enabled(false);
-    elOut.innerHTML = `
-      <div class="box">
-        <h3>Result</h3>
-        <div class="row" style="justify-content:space-between">
-          <div class="pill">1111 → <b>${k}</b></div>
-          <div class="pill good"><b>Solved</b></div>
-        </div>
-      </div>
-      <div class="box">
-        <h3>Enter this code</h3>
-        <div class="mono big blue">${answer}</div>
-        <div class="note">Step 2 not needed.</div>
-      </div>
-    `;
-    return;
-  }
-
-  // Otherwise Step 2 is needed
-  setStep2Enabled(true);
-
-  if (kVal === '' || rVal === '') return renderBase();
-
-    const k = Number(kVal);
-    const r = Number(rVal);
-    const cands = candidatesFrom(k, r);
-
-    let html = `
-      <div class="box">
-        <h3>Result</h3>
-        <div class="row" style="justify-content:space-between">
-          <div class="pill">1111 → <b>${k}</b> • 1122 → <b>${r}</b></div>
-          <div class="pill">Candidates: <b>${cands.length}</b></div>
-        </div>
-      </div>
-    `;
-
-    if (cands.length === 0) {
-      html += `
-        <div class="box">
-          <h3>Status</h3>
-          <div class="bad"><b>Inconsistent feedback</b></div>
-          <div class="note">Re-check the counts for both steps.</div>
-        </div>
-      `;
-      elOut.innerHTML = html;
+    // Before Step 1
+    if (kVal === "") {
+      setStep2Enabled(true);
+      statusText.textContent = "Select feedback for Step 1 and Step 2.";
+      candText.textContent = "";
+      finalCode.style.display = "none";
+      finalCode.textContent = "";
+      resetStep3UI();
+      resetStep4UI();
       return;
     }
 
-    if (cands.length === 1) {
-      html += `
-        <div class="box">
-          <h3>Enter this code</h3>
-          <div class="mono big blue">${cands[0]}</div>
-          <div class="note">Done.</div>
-        </div>
-      `;
-      elOut.innerHTML = html;
+    const k = Number(kVal);
+
+    // Early finish after Step 1
+    if (k === 0 || k === 4) {
+      const ans = (k === 0) ? "2222" : "1111";
+      setStep2Enabled(false);
+      setSolved(ans, "Step 2 not needed.");
       return;
     }
 
-    // Guaranteed branch plan:
-    // If (k,r) != (2,2), this situation shouldn't happen, but handle anyway by using a filter-based extra step.
-    // If (k,r) == (2,2), do Step 3 = 1212, then if still ambiguous do Step 4 = 1221.
-
-    const isWorst = (k === 2 && r === 2);
-    const g3 = isWorst ? '1212' : cands[0];
-
-    html += `
-      <div class="box">
-        <h3>Step 3</h3>
-        <div class="pill">Next guess: <b class="mono big yellow">${g3}</b></div>
-        <div style="height:10px"></div>
-        <label for="g3">Feedback for ${g3} (0–4)</label>
-        <select id="g3">
-          <option value="">Select…</option>
-          <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option>
-        </select>
-        <div class="note" style="margin-top:10px" id="g3help"></div>
-      </div>
-    `;
-
-    elOut.innerHTML = html;
-
-    const elG3 = document.getElementById('g3');
-    const elHelp = document.getElementById('g3help');
-
-    elG3.addEventListener('change', () => {
-      const v = elG3.value;
-      if (v === '') { elHelp.textContent = ''; return; }
-      const res = Number(v);
-
-      const after3 = cands.filter(code => exactMatches(code, g3) === res);
-
-      if (after3.length === 0) {
-        elHelp.innerHTML = `<span class="bad"><b>No match.</b></span> Re-check the Step 3 feedback.`;
-        return;
-      }
-
-      if (after3.length === 1) {
-        elHelp.innerHTML = `✅ Solution: <span class="mono big blue">${after3[0]}</span>`;
-        return;
-      }
-
-      // Only expected in the worst-case (k=r=2) with g3=1212 and res=2.
-      // Guaranteed Step 4: guess one remaining candidate (1221) and the feedback decides.
-      const g4 = '1221';
-
-      elHelp.innerHTML = `
-        <div class="hr"></div>
-        <div class="note"><b>Still ambiguous</b> (remaining: <span class="mono">${after3.join(' ')}</span>)</div>
-        <div class="pill" style="margin-top:10px">Step 4 guess: <b class="mono big yellow">${g4}</b></div>
-        <div style="height:10px"></div>
-        <label for="g4">Feedback for ${g4} (0–4)</label>
-        <select id="g4">
-          <option value="">Select…</option>
-          <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option>
-        </select>
-        <div class="note" style="margin-top:10px" id="g4help"></div>
-      `;
-
-      const elG4 = document.getElementById('g4');
-      const elG4Help = document.getElementById('g4help');
-
-      elG4.addEventListener('change', () => {
-        const vv = elG4.value;
-        if (vv === '') { elG4Help.textContent = ''; return; }
-        const res4 = Number(vv);
-
-        const final = after3.filter(code => exactMatches(code, g4) === res4);
-        if (final.length === 1) {
-          elG4Help.innerHTML = `✅ Solution: <span class="mono big blue">${final[0]}</span>`;
-        } else if (final.length === 0) {
-          elG4Help.innerHTML = `<span class="bad"><b>No match.</b></span> Re-check the Step 4 feedback.`;
-        } else {
-          elG4Help.innerHTML = `<span class="bad"><b>Not unique.</b></span> Remaining: <span class="mono">${final.join(' ')}</span>`;
-        }
-      });
-    });
-  }
-
-  elK.addEventListener('change', render);
-  elReset.addEventListener('click', () => {
-    elK.value = '';
-    elR.value = '';
+    // Need Step 2
     setStep2Enabled(true);
-    renderBase();
+
+    const rVal = elR.value;
+    if (rVal === "") {
+      statusText.textContent = "Pick Step 2 feedback to continue.";
+      candText.textContent = "";
+      finalCode.style.display = "none";
+      finalCode.textContent = "";
+      resetStep3UI();
+      resetStep4UI();
+      return;
+    }
+
+    const r = Number(rVal);
+    baseCands = candidatesFrom(k, r);
+
+    if (baseCands.length === 0) {
+      setInconsistent("after Step 2");
+      return;
+    }
+
+    if (baseCands.length === 1) {
+      setSolved(baseCands[0]);
+      return;
+    }
+
+    // Need Step 3
+    statusText.innerHTML = `Need more input — <b>${baseCands.length}</b> candidates remain.`;
+    candText.innerHTML = `Remaining: <span class="mono">${baseCands.join(" ")}</span>`;
+    finalCode.style.display = "none";
+    finalCode.textContent = "";
+
+    resetStep4UI(); // Step 4 depends on Step 3
+
+    g3 = bestNextGuess(baseCands) || baseCands[0];
+    g3Text.textContent = g3;
+    g3Label.textContent = `Feedback for ${g3} (0–4)`;
+    g3Sel.disabled = false;
+
+    // If user already selected a Step3 value earlier, re-apply it
+    if (g3Sel.value !== "") {
+      handleStep3();
+    } else {
+      g3Help.textContent = "Select Step 3 feedback if your raid is still not solved.";
+    }
+  }
+
+  function handleStep3() {
+    if (!g3 || !baseCands || baseCands.length === 0) return;
+
+    const v = g3Sel.value;
+    if (v === "") {
+      resetStep4UI();
+      g3Help.textContent = "";
+      return;
+    }
+
+    const res3 = Number(v);
+    candsAfter3 = baseCands.filter(code => exactMatches(code, g3) === res3);
+
+    if (candsAfter3.length === 0) {
+      g3Help.innerHTML = `<span class="bad"><b>No match.</b></span> Re-check Step 3 feedback.`;
+      resetStep4UI();
+      return;
+    }
+
+    if (candsAfter3.length === 1) {
+      g3Help.innerHTML = `✅ Solution: <span class="mono big blue">${candsAfter3[0]}</span>`;
+      setSolved(candsAfter3[0], "Solved at Step 3.");
+      return;
+    }
+
+    // Need Step 4
+    g3Help.innerHTML = `Still ambiguous: <span class="mono">${candsAfter3.join(" ")}</span>`;
+
+    g4 = bestNextGuess(candsAfter3) || candsAfter3[0];
+    g4Text.textContent = g4;
+    g4Label.textContent = `Feedback for ${g4} (0–4)`;
+    g4Sel.disabled = false;
+    g4Help.textContent = "Select Step 4 feedback to finish.";
+
+    // If user already selected Step4 value earlier, re-apply it
+    if (g4Sel.value !== "") {
+      handleStep4();
+    }
+  }
+
+  function handleStep4() {
+    if (!g4 || !candsAfter3 || candsAfter3.length === 0) return;
+
+    const v = g4Sel.value;
+    if (v === "") {
+      g4Help.textContent = "";
+      return;
+    }
+
+    const res4 = Number(v);
+    const final = candsAfter3.filter(code => exactMatches(code, g4) === res4);
+
+    if (final.length === 0) {
+      g4Help.innerHTML = `<span class="bad"><b>No match.</b></span> Re-check Step 4 feedback.`;
+      return;
+    }
+    if (final.length === 1) {
+      g4Help.innerHTML = `✅ Solution: <span class="mono big blue">${final[0]}</span>`;
+      setSolved(final[0], "Solved at Step 4.");
+      return;
+    }
+
+    // Extremely unlikely for this tiny space; still show remaining.
+    g4Help.innerHTML = `<span class="bad"><b>Not unique.</b></span> Remaining: <span class="mono">${final.join(" ")}</span>`;
+  }
+
+  // Event wiring
+  elK.addEventListener("change", () => {
+    // When Step 1 changes, clear downstream selections
+    elR.value = "";
+    g3Sel.value = "";
+    g4Sel.value = "";
+    render();
   });
 
-  renderBase();
+  elR.addEventListener("change", () => {
+    g3Sel.value = "";
+    g4Sel.value = "";
+    render();
+  });
+
+  g3Sel.addEventListener("change", () => {
+    // Changing Step 3 resets Step 4 selection
+    g4Sel.value = "";
+    handleStep3();
+  });
+
+  g4Sel.addEventListener("change", handleStep4);
+
+  elReset.addEventListener("click", () => {
+    elK.value = "";
+    elR.value = "";
+    g3Sel.value = "";
+    g4Sel.value = "";
+    setStep2Enabled(true);
+    statusText.textContent = "Select feedback for Step 1 and Step 2.";
+    candText.textContent = "";
+    finalCode.style.display = "none";
+    finalCode.textContent = "";
+    resetStep3UI();
+    resetStep4UI();
+  });
+
+  // Initial
+  resetStep3UI();
+  resetStep4UI();
+  render();
 </script>
 </body>
 </html>
