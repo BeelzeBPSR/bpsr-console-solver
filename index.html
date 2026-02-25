@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Avatar of the End — Console Solver</title>
+  <style>
+    :root{
+      --bg:#0a0b14;
+      --panel:rgba(18,19,39,.86);
+      --line:rgba(255,255,255,.12);
+      --text:#f6f7ff;
+      --muted:#b7b8d6;
+      --pink:#ff4fd8;
+      --blue:#39b6ff;
+      --yellow:#ffd54a;
+      --good:#56f2b4;
+      --bad:#ff6b6b;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--text);
+      background:
+        radial-gradient(900px 520px at 18% 10%, rgba(255,79,216,.22), transparent 60%),
+        radial-gradient(900px 520px at 82% 12%, rgba(57,182,255,.18), transparent 62%),
+        radial-gradient(900px 560px at 50% 92%, rgba(255,213,74,.14), transparent 62%),
+        var(--bg);
+    }
+    .wrap{max-width:760px;margin:0 auto;padding:22px 16px 44px}
+    h1{margin:0 0 6px;font-size:20px;letter-spacing:.2px}
+    .sub{margin:0 0 14px;color:var(--muted);line-height:1.45;font-size:13px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+    .grid{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+    @media (max-width:720px){.grid{grid-template-columns:1fr}}
+    .box{border:1px dashed rgba(255,255,255,.18);border-radius:14px;padding:12px;background:rgba(0,0,0,.14)}
+    .box h3{margin:0 0 8px;font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+    label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+    select,button{width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(8,10,22,.65);color:var(--text);padding:10px 12px;font-size:14px;outline:none}
+    select:focus{border-color:rgba(57,182,255,.55);box-shadow:0 0 0 3px rgba(57,182,255,.18)}
+    button{cursor:pointer;border-color:rgba(255,255,255,.16);background:linear-gradient(180deg, rgba(255,79,216,.26), rgba(57,182,255,.16));}
+    button.secondary{background:transparent}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .hr{height:1px;background:var(--line);margin:12px 0}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.18);color:var(--muted);font-size:12px}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace}
+    .big{font-size:18px;font-weight:900;letter-spacing:.14em}
+    .pink{color:var(--pink)}
+    .blue{color:var(--blue)}
+    .yellow{color:var(--yellow)}
+    .good{color:var(--good)}
+    .bad{color:var(--bad)}
+    .note{font-size:12px;color:var(--muted);line-height:1.45}
+    .tiny{font-size:11px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1><span class="pink">Dreambloom Ruins: Erosion Bloom Afterimage</span> — Console Solver</h1>
+    <p class="sub">Blue Protocol: Star Resonance (Season 2) • Phase 2: <b>Avatar of the End</b>. Consoles take a 4-digit code using only <span class="mono">1</span>/<span class="mono">2</span>. Select the in-game feedback: <b># correct digits in the correct position</b>. (Guaranteed ≤4 checks with forced openers.)</p>
+
+    <div class="card">
+      <div class="grid">
+        <div class="box">
+          <h3>Step 1 (forced)</h3>
+          <div class="pill"><span class="mono big">1111</span></div>
+          <div style="height:10px"></div>
+          <label for="k">Feedback (0–4)</label>
+          <select id="k">
+            <option value="">Select…</option>
+            <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option>
+          </select>
+        </div>
+
+        <div class="box">
+          <h3>Step 2 (forced)</h3>
+          <div class="pill"><span class="mono big">1122</span></div>
+          <div style="height:10px"></div>
+          <label for="r">Feedback (0–4)</label>
+          <select id="r">
+            <option value="">Select…</option>
+            <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+      <div id="out"></div>
+      <div class="hr"></div>
+
+      <div class="row">
+        <div class="note" style="flex:1">
+          Best case: 1 step; Worst case: 4 steps.
+        </div>
+        <div style="min-width:160px">
+          <button id="reset" class="secondary">Reset</button>
+        </div>
+      </div>
+      <div class="tiny" style="margin-top:12px; text-align:center;">
+  <div style="margin-top:14px;">
+    Made by <b>Beelze</b> from <span class="pink">TheDayDreamers</span> Guild (#294742)
+  </div>
+  <div style="margin-top:12px;">
+    <!-- Replace logo.png with your actual logo filename -->
+    <img src="logo.png" alt="TheDayDreamers Guild Logo" style="max-width:150px; opacity:0.9;">
+  </div>
+</div>
+    </div>
+  </div>
+
+<script>
+  function exactMatches(a, b) {
+    let m = 0;
+    for (let i = 0; i < 4; i++) if (a[i] === b[i]) m++;
+    return m;
+  }
+
+  // All 16 codes length 4 over {1,2}
+  const ALL = (() => {
+    const out = [];
+    for (let i = 0; i < 16; i++) {
+      let s = '';
+      for (let b = 3; b >= 0; b--) s += ((i >> b) & 1) ? '2' : '1';
+      out.push(s);
+    }
+    return out;
+  })();
+
+  function candidatesFrom(k, r) {
+    return ALL.filter(code => exactMatches(code, '1111') === k && exactMatches(code, '1122') === r);
+  }
+
+  const elK = document.getElementById('k');
+const elR = document.getElementById('r');
+const elOut = document.getElementById('out');
+const elReset = document.getElementById('reset');
+
+function setStep2Enabled(enabled) {
+  elR.disabled = !enabled;
+  elR.style.opacity = enabled ? '1' : '0.55';
+  elR.style.cursor = enabled ? 'pointer' : 'not-allowed';
+  if (!enabled) elR.value = '';
+}
+
+  function renderBase() {
+    elOut.innerHTML = `
+      <div class="box">
+        <h3>Result</h3>
+        <div class="note">Select feedback for Step 1 and Step 2.</div>
+      </div>
+    `;
+  }
+
+  function render() {
+  const kVal = elK.value;
+  const rVal = elR.value;
+
+  // Early-finish after Step 1
+  if (kVal !== '' && (Number(kVal) === 0 || Number(kVal) === 4)) {
+    const k = Number(kVal);
+    const answer = (k === 0) ? '2222' : '1111';
+    setStep2Enabled(false);
+    elOut.innerHTML = `
+      <div class="box">
+        <h3>Result</h3>
+        <div class="row" style="justify-content:space-between">
+          <div class="pill">1111 → <b>${k}</b></div>
+          <div class="pill good"><b>Solved</b></div>
+        </div>
+      </div>
+      <div class="box">
+        <h3>Enter this code</h3>
+        <div class="mono big blue">${answer}</div>
+        <div class="note">Step 2 not needed.</div>
+      </div>
+    `;
+    return;
+  }
+
+  // Otherwise Step 2 is needed
+  setStep2Enabled(true);
+
+  if (kVal === '' || rVal === '') return renderBase();
+
+    const k = Number(kVal);
+    const r = Number(rVal);
+    const cands = candidatesFrom(k, r);
+
+    let html = `
+      <div class="box">
+        <h3>Result</h3>
+        <div class="row" style="justify-content:space-between">
+          <div class="pill">1111 → <b>${k}</b> • 1122 → <b>${r}</b></div>
+          <div class="pill">Candidates: <b>${cands.length}</b></div>
+        </div>
+      </div>
+    `;
+
+    if (cands.length === 0) {
+      html += `
+        <div class="box">
+          <h3>Status</h3>
+          <div class="bad"><b>Inconsistent feedback</b></div>
+          <div class="note">Re-check the counts for both steps.</div>
+        </div>
+      `;
+      elOut.innerHTML = html;
+      return;
+    }
+
+    if (cands.length === 1) {
+      html += `
+        <div class="box">
+          <h3>Enter this code</h3>
+          <div class="mono big blue">${cands[0]}</div>
+          <div class="note">Done.</div>
+        </div>
+      `;
+      elOut.innerHTML = html;
+      return;
+    }
+
+    // Guaranteed branch plan:
+    // If (k,r) != (2,2), this situation shouldn't happen, but handle anyway by using a filter-based extra step.
+    // If (k,r) == (2,2), do Step 3 = 1212, then if still ambiguous do Step 4 = 1221.
+
+    const isWorst = (k === 2 && r === 2);
+    const g3 = isWorst ? '1212' : cands[0];
+
+    html += `
+      <div class="box">
+        <h3>Step 3</h3>
+        <div class="pill">Next guess: <b class="mono big yellow">${g3}</b></div>
+        <div style="height:10px"></div>
+        <label for="g3">Feedback for ${g3} (0–4)</label>
+        <select id="g3">
+          <option value="">Select…</option>
+          <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option>
+        </select>
+        <div class="note" style="margin-top:10px" id="g3help"></div>
+      </div>
+    `;
+
+    elOut.innerHTML = html;
+
+    const elG3 = document.getElementById('g3');
+    const elHelp = document.getElementById('g3help');
+
+    elG3.addEventListener('change', () => {
+      const v = elG3.value;
+      if (v === '') { elHelp.textContent = ''; return; }
+      const res = Number(v);
+
+      const after3 = cands.filter(code => exactMatches(code, g3) === res);
+
+      if (after3.length === 0) {
+        elHelp.innerHTML = `<span class="bad"><b>No match.</b></span> Re-check the Step 3 feedback.`;
+        return;
+      }
+
+      if (after3.length === 1) {
+        elHelp.innerHTML = `✅ Solution: <span class="mono big blue">${after3[0]}</span>`;
+        return;
+      }
+
+      // Only expected in the worst-case (k=r=2) with g3=1212 and res=2.
+      // Guaranteed Step 4: guess one remaining candidate (1221) and the feedback decides.
+      const g4 = '1221';
+
+      elHelp.innerHTML = `
+        <div class="hr"></div>
+        <div class="note"><b>Still ambiguous</b> (remaining: <span class="mono">${after3.join(' ')}</span>)</div>
+        <div class="pill" style="margin-top:10px">Step 4 guess: <b class="mono big yellow">${g4}</b></div>
+        <div style="height:10px"></div>
+        <label for="g4">Feedback for ${g4} (0–4)</label>
+        <select id="g4">
+          <option value="">Select…</option>
+          <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option>
+        </select>
+        <div class="note" style="margin-top:10px" id="g4help"></div>
+      `;
+
+      const elG4 = document.getElementById('g4');
+      const elG4Help = document.getElementById('g4help');
+
+      elG4.addEventListener('change', () => {
+        const vv = elG4.value;
+        if (vv === '') { elG4Help.textContent = ''; return; }
+        const res4 = Number(vv);
+
+        const final = after3.filter(code => exactMatches(code, g4) === res4);
+        if (final.length === 1) {
+          elG4Help.innerHTML = `✅ Solution: <span class="mono big blue">${final[0]}</span>`;
+        } else if (final.length === 0) {
+          elG4Help.innerHTML = `<span class="bad"><b>No match.</b></span> Re-check the Step 4 feedback.`;
+        } else {
+          elG4Help.innerHTML = `<span class="bad"><b>Not unique.</b></span> Remaining: <span class="mono">${final.join(' ')}</span>`;
+        }
+      });
+    });
+  }
+
+  elK.addEventListener('change', render);
+  elReset.addEventListener('click', () => {
+    elK.value = '';
+    elR.value = '';
+    setStep2Enabled(true);
+    renderBase();
+  });
+
+  renderBase();
+</script>
+</body>
+</html>
